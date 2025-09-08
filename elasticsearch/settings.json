@@ -1,0 +1,43 @@
+{
+  "analysis": {
+    "char_filter": {
+      "alpha_numeric_char_filter": {
+        "pattern": "(?<=\\d)(?=[a-zA-Z])|(?<=[a-zA-Z])(?=\\d)",
+        "type": "pattern_replace",
+        "replacement": " "
+      },
+      "and_char_filter": {
+        "type": "mapping",
+        "mappings": [
+          "& => \\u0020&\\u0020"
+        ]
+      },
+      "multiplication_char_filter": {
+        "pattern": "x(?=\\d)",
+        "type": "pattern_replace",
+        "replacement": " x"
+      }
+    },
+    "tokenizer": {
+      "non_alpha_numeric_tokenizer": {
+        "pattern": "(?<!\\d)-|-(?!\\d)|(?<!\\d)/|/(?!\\d)|(?<!\\d)\\.|\\.(?!\\d)|[^a-zA-Z\\d\\/&*°\\.-]",
+        "type": "pattern"
+      }
+    },
+    "analyzer": {
+      "basic_analyzer": {
+        "filter": [
+          "lowercase",
+          "stemmer"
+        ],
+        "char_filter": [
+          "and_char_filter",
+          "multiplication_char_filter",
+          "alpha_numeric_char_filter"
+        ],
+        "type": "custom",
+        "tokenizer": "non_alpha_numeric_tokenizer"
+      }
+    }
+  }
+}

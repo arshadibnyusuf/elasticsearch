@@ -1,0 +1,72 @@
+{
+  "properties": {
+    "title": {
+      "type": "text",
+      "analyzer": "basic_analyzer",
+      "index_options": "positions"
+    },
+    "brand": {
+      "type": "text",
+      "analyzer": "basic_analyzer",
+      "index_options": "positions",
+      "fields": {
+        "keyword": {
+          "type": "keyword"
+        }
+      }
+    },
+    "description": {
+      "type": "text",
+      "analyzer": "basic_analyzer",
+      "index_options": "positions"
+    },
+    "categories": {
+      "type": "text",
+      "analyzer": "basic_analyzer",
+      "index_options": "positions"
+    },
+    "product_details": {
+      "type": "text",
+      "analyzer": "basic_analyzer",
+      "index_options": "positions"
+    },
+    "rank": {
+      "type": "integer",
+      "doc_values": true
+    },
+    "reviews_count": {
+      "type": "integer",
+      "doc_values": true
+    },
+    "rating": {
+      "type": "float"
+    },
+    "availability": {
+      "type": "keyword"
+    },
+    "manufacturer": {
+      "type": "keyword"
+    },
+    "department": {
+      "type": "keyword"
+    },
+    "top_review": {
+      "type": "text"
+    },
+    "delivery": {
+      "type": "text"
+    },
+    "features": {
+      "type": "text"
+    },
+    "ingredients": {
+      "type": "text"
+    },
+    "is_available": {
+      "type": "boolean"
+    },
+    "root_bs_category": {
+      "type": "keyword"
+    }
+  }
+}
