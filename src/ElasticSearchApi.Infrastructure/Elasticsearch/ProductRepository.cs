@@ -204,8 +204,8 @@ public class ProductRepository(
 
             // Parse response
             var msearchResponse = JsonConvert.DeserializeObject<MultiSearchResponse>(response.Body);
-            var allProducts = new List<Product>();
-            var addedIds = new HashSet<string>();
+            List<Product> allProducts = [];
+            HashSet<string> addedIds = [];
 
             foreach (var searchResponse in msearchResponse.Responses)
             {
@@ -253,7 +253,7 @@ public class ProductRepository(
     private class MultiSearchResponse
     {
         [JsonProperty("responses")]
-        public List<SearchResponse> Responses { get; set; } = new();
+        public List<SearchResponse> Responses { get; set; } = [];
     }
 
     private class SearchResponse
@@ -274,7 +274,7 @@ public class ProductRepository(
     private class HitsContainer
     {
         [JsonProperty("hits")]
-        public List<Hit> Hits { get; set; } = new();
+        public List<Hit> Hits { get; set; } = [];
     }
 
     private class Hit

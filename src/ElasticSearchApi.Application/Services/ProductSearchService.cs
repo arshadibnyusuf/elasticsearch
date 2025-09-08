@@ -104,7 +104,7 @@ public class ProductSearchService(
             if (string.IsNullOrWhiteSpace(searchTerm))
             {
                 logger.LogWarning("Search term is empty");
-                return new List<Product>();
+                return [];
             }
 
             if (pageSize <= 0 || pageSize > 100)

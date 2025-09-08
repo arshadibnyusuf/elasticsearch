@@ -6,7 +6,7 @@ namespace ElasticSearchApi.Infrastructure.Elasticsearch;
 
 public class LayeredQueryBuilder : ILayeredQueryBuilder
 {
-    private readonly string[] _searchableFields = new[] { "title", "brand", "description", "categories", "product_details" };
+    private readonly string[] _searchableFields = ["title", "brand", "description", "categories", "product_details"];
 
     public string BuildMultiSearchQuery(string indexName, string searchTerm, int pageSize)
     {

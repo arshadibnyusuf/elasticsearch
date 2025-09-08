@@ -13,7 +13,7 @@ public class CsvParserService(ILogger<CsvParserService> logger) : ICsvParserServ
 
     public async Task<IEnumerable<Product>> ParseProductsAsync(string filePath)
     {
-        var products = new List<Product>();
+        List<Product> products = [];
 
         try
         {
@@ -113,17 +113,17 @@ public class CsvParserService(ILogger<CsvParserService> logger) : ICsvParserServ
     private List<string> ParseJsonArray(string? value)
     {
         if (string.IsNullOrWhiteSpace(value) || value == "null")
-            return new List<string>();
+            return [];
 
         try
         {
             var result = JsonConvert.DeserializeObject<List<string>>(value);
-            return result ?? new List<string>();
+            return result ?? [];
         }
         catch
         {
             // If JSON parsing fails, treat as a single value
-            return new List<string> { value };
+            return [value];
         }
     }
 }
