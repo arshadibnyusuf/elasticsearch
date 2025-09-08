@@ -21,7 +21,13 @@ public static class ServiceCollectionExtensions
                 .DefaultIndex(settings.DefaultIndex)
                 .RequestTimeout(TimeSpan.FromSeconds(settings.RequestTimeoutSeconds))
                 .MaxRetryTimeout(TimeSpan.FromSeconds(settings.ConnectionTimeoutSeconds))
-                .MaximumRetries(settings.MaxRetryAttempts);
+                .MaximumRetries(settings.MaxRetryAttempts)
+                .DefaultMappingFor<Domain.Entities.Product>(m => m
+                    .PropertyName(p => p.ReviewsCount, "reviews_count")
+                    .PropertyName(p => p.TopReview, "top_review")
+                    .PropertyName(p => p.IsAvailable, "is_available")
+                    .PropertyName(p => p.ProductDetails, "product_details")
+                );
 
             if (!string.IsNullOrEmpty(settings.Username) && !string.IsNullOrEmpty(settings.Password))
             {

@@ -64,9 +64,6 @@
     },
     "is_available": {
       "type": "boolean"
-    },
-    "root_bs_category": {
-      "type": "keyword"
     }
   }
 }

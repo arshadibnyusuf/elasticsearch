@@ -1,10 +1,11 @@
-using Serilog;
+using System.Reflection;
+using ElasticSearchApi.Api.Middleware;
+using ElasticSearchApi.Api.Services;
 using ElasticSearchApi.Application.Interfaces;
 using ElasticSearchApi.Application.Services;
 using ElasticSearchApi.Infrastructure.Extensions;
-using ElasticSearchApi.Api.Middleware;
-using ElasticSearchApi.Api.Services;
-using HealthChecks.Elasticsearch;
+using Microsoft.OpenApi.Models;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,17 +20,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
+    c.SwaggerDoc("v1", new OpenApiInfo 
     { 
         Title = "ElasticSearch Product Search API", 
         Version = "v1",
-        Description = "A simplified REST API for searching Amazon product data using Elasticsearch with sophisticated layered query approach."
+        Description = "A simplified REST API for searching Amazon product data using Elasticsearch with a layered query approach."
     });
     
     // Include XML comments if available
-    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (System.IO.File.Exists(xmlPath))
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
     {
         c.IncludeXmlComments(xmlPath);
     }

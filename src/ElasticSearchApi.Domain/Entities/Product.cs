@@ -18,6 +18,5 @@ public class Product
     public List<string> Features { get; set; } = new();
     public string Ingredients { get; set; } = string.Empty;
     public bool IsAvailable { get; set; }
-    public string RootBsCategory { get; set; } = string.Empty;
     public string ProductDetails { get; set; } = string.Empty;
 }

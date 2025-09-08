@@ -57,7 +57,6 @@ public class CsvParserService(ILogger<CsvParserService> logger) : ICsvParserServ
                             Features = ParseJsonArray(csv.GetField<string>("features")),
                             Ingredients = csv.GetField<string>("ingredients") ?? string.Empty,
                             IsAvailable = ParseBool(csv.GetField<string>("is_available")),
-                            RootBsCategory = csv.GetField<string>("root_bs_category") ?? string.Empty,
                             ProductDetails = csv.GetField<string>("product_details") ?? string.Empty
                         };
 
