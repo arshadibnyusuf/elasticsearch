@@ -5,20 +5,12 @@ namespace ElasticSearchApi.Api.Controllers;
 
 [ApiController]
 [Route("api/products")]
-public class ProductsController : ControllerBase
+public class ProductsController(
+    IProductSearchService productSearchService,
+    ILogger<ProductsController> logger) : ControllerBase
 {
-    private readonly IProductSearchService _productSearchService;
-    private readonly ILogger<ProductsController> _logger;
     private const string DefaultIndexName = "products";
     private const string CsvFilePath = "data.csv";
-
-    public ProductsController(
-        IProductSearchService productSearchService,
-        ILogger<ProductsController> logger)
-    {
-        _productSearchService = productSearchService;
-        _logger = logger;
-    }
 
     /// <summary>
     /// Indexes products from the data.csv file into Elasticsearch
@@ -28,9 +20,9 @@ public class ProductsController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Starting product indexing from CSV");
+            logger.LogInformation("Starting product indexing from CSV");
             
-            var result = await _productSearchService.IndexProductsFromCsvAsync(
+            var result = await productSearchService.IndexProductsFromCsvAsync(
                 CsvFilePath, DefaultIndexName, cancellationToken);
 
             if (result.Success)
@@ -53,7 +45,7 @@ public class ProductsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error indexing products");
+            logger.LogError(ex, "Error indexing products");
             return StatusCode(500, new 
             { 
                 message = "An unexpected error occurred while indexing products", 
@@ -87,9 +79,9 @@ public class ProductsController : ControllerBase
                 size = 20;
             }
 
-            _logger.LogInformation("Searching for products with term: {SearchTerm}, size: {Size}", q, size);
+            logger.LogInformation("Searching for products with term: {SearchTerm}, size: {Size}", q, size);
             
-            var results = await _productSearchService.SearchProductsAsync(
+            var results = await productSearchService.SearchProductsAsync(
                 DefaultIndexName, q, size, cancellationToken);
 
             return Ok(new
@@ -101,7 +93,7 @@ public class ProductsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error searching products");
+            logger.LogError(ex, "Error searching products");
             return StatusCode(500, new { message = "An error occurred while searching products", error = ex.Message });
         }
     }

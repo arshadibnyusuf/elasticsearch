@@ -15,31 +15,21 @@ using ElasticSearchApi.Domain.Interfaces;
 
 namespace ElasticSearchApi.Infrastructure.Elasticsearch;
 
-public class ProductRepository : IProductRepository
+public class ProductRepository(
+    IElasticClient client,
+    ILayeredQueryBuilder queryBuilder,
+    ILogger<ProductRepository> logger) : IProductRepository
 {
-    private readonly IElasticClient _client;
-    private readonly ILayeredQueryBuilder _queryBuilder;
-    private readonly ILogger<ProductRepository> _logger;
-
-    public ProductRepository(
-        IElasticClient client,
-        ILayeredQueryBuilder queryBuilder,
-        ILogger<ProductRepository> logger)
-    {
-        _client = client;
-        _queryBuilder = queryBuilder;
-        _logger = logger;
-    }
 
     public async Task<bool> CreateIndexAsync(string indexName, Stream settingsJson, Stream mappingsJson, CancellationToken cancellationToken = default)
     {
         try
         {
             // Check if index already exists
-            var existsResponse = await _client.Indices.ExistsAsync(indexName, ct: cancellationToken);
+            var existsResponse = await client.Indices.ExistsAsync(indexName, ct: cancellationToken);
             if (existsResponse.Exists)
             {
-                _logger.LogInformation("Index {IndexName} already exists", indexName);
+                logger.LogInformation("Index {IndexName} already exists", indexName);
                 return true;
             }
 
@@ -60,7 +50,7 @@ public class ProductRepository : IProductRepository
                 mappings = mappings
             });
             
-            var createIndexResponse = await _client.LowLevel.Indices.CreateAsync<StringResponse>(
+            var createIndexResponse = await client.LowLevel.Indices.CreateAsync<StringResponse>(
                 indexName,
                 PostData.String(indexBody),
                 ctx: cancellationToken);
@@ -73,19 +63,19 @@ public class ProductRepository : IProductRepository
                     errorDetails = createIndexResponse.Body;
                 }
                 
-                _logger.LogError("Failed to create index {IndexName}: {Error} - Response: {Response}", 
+                logger.LogError("Failed to create index {IndexName}: {Error} - Response: {Response}", 
                     indexName, 
                     createIndexResponse.OriginalException?.Message ?? "Unknown error",
                     errorDetails);
                 return false;
             }
 
-            _logger.LogInformation("Successfully created index {IndexName} with custom settings and mappings", indexName);
+            logger.LogInformation("Successfully created index {IndexName} with custom settings and mappings", indexName);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating index {IndexName}", indexName);
+            logger.LogError(ex, "Error creating index {IndexName}", indexName);
             return false;
         }
     }
@@ -97,23 +87,23 @@ public class ProductRepository : IProductRepository
             var productList = products.ToList();
             if (!productList.Any())
             {
-                _logger.LogWarning("No products to index");
+                logger.LogWarning("No products to index");
                 return true;
             }
             
             // Verify index exists
-            var indexExists = await _client.Indices.ExistsAsync(indexName, ct: cancellationToken);
+            var indexExists = await client.Indices.ExistsAsync(indexName, ct: cancellationToken);
             if (!indexExists.Exists)
             {
-                _logger.LogError("Index {IndexName} does not exist. Cannot index products.", indexName);
+                logger.LogError("Index {IndexName} does not exist. Cannot index products.", indexName);
                 return false;
             }
             
             // Check if index already has data
-            var countResponse = await _client.CountAsync<Product>(c => c.Index(indexName), cancellationToken);
+            var countResponse = await client.CountAsync<Product>(c => c.Index(indexName), cancellationToken);
             if (countResponse.IsValid && countResponse.Count > 0)
             {
-                _logger.LogInformation("Index {IndexName} already contains {Count} documents. Skipping indexing.", indexName, countResponse.Count);
+                logger.LogInformation("Index {IndexName} already contains {Count} documents. Skipping indexing.", indexName, countResponse.Count);
                 return true;
             }
 
@@ -125,16 +115,16 @@ public class ProductRepository : IProductRepository
             for (int i = 0; i < productList.Count; i += batchSize)
             {
                 var currentBatch = (i / batchSize) + 1;
-                _logger.LogInformation("Processing batch {CurrentBatch}/{TotalBatches} (items {StartIndex}-{EndIndex} of {Total})", 
+                logger.LogInformation("Processing batch {CurrentBatch}/{TotalBatches} (items {StartIndex}-{EndIndex} of {Total})", 
                     currentBatch, totalBatches, i + 1, Math.Min(i + batchSize, productList.Count), productList.Count);
                 
                 var batchList = productList.Skip(i).Take(batchSize).ToList();
-                _logger.LogDebug("Batch {CurrentBatch} contains {Count} items. First ID: {FirstId}, Last ID: {LastId}", 
+                logger.LogDebug("Batch {CurrentBatch} contains {Count} items. First ID: {FirstId}, Last ID: {LastId}", 
                     currentBatch, batchList.Count, 
                     batchList.FirstOrDefault()?.Id ?? "N/A", 
                     batchList.LastOrDefault()?.Id ?? "N/A");
                 
-                var bulkResponse = await _client.BulkAsync(b => b
+                var bulkResponse = await client.BulkAsync(b => b
                     .Index(indexName)
                     .IndexMany(batchList, (descriptor, product) => descriptor
                         .Id(product.Id)
@@ -150,7 +140,7 @@ public class ProductRepository : IProductRepository
                         if (item.Status >= 400)
                         {
                             hasRealErrors = true;
-                            _logger.LogError("Failed to index document {Id} - Status: {Status}, Error: {Error}",
+                            logger.LogError("Failed to index document {Id} - Status: {Status}, Error: {Error}",
                                 item.Id, item.Status, item.Error?.ToString() ?? "No error details");
                         }
                     }
@@ -158,14 +148,14 @@ public class ProductRepository : IProductRepository
                 
                 if (hasRealErrors)
                 {
-                    _logger.LogError("Some documents failed to index in batch {CurrentBatch}", currentBatch);
+                    logger.LogError("Some documents failed to index in batch {CurrentBatch}", currentBatch);
                     return false;
                 }
                 
                 // If we get here, all documents were indexed successfully (even if status was 201)
 
                 totalIndexed += batchList.Count;
-                _logger.LogInformation("Batch {CurrentBatch}/{TotalBatches} completed successfully. Total indexed so far: {TotalIndexed}/{Total} products", 
+                logger.LogInformation("Batch {CurrentBatch}/{TotalBatches} completed successfully. Total indexed so far: {TotalIndexed}/{Total} products", 
                     currentBatch, totalBatches, totalIndexed, productList.Count);
                 
                 // Add a small delay between batches to avoid overwhelming ES
@@ -175,21 +165,21 @@ public class ProductRepository : IProductRepository
                 }
             }
 
-            _logger.LogInformation("Successfully indexed all {Count} products", productList.Count);
+            logger.LogInformation("Successfully indexed all {Count} products", productList.Count);
             
             // Verify the count in the index
             await Task.Delay(500, cancellationToken); // Give ES time to refresh
-            var finalCountResponse = await _client.CountAsync<Product>(c => c.Index(indexName), cancellationToken);
+            var finalCountResponse = await client.CountAsync<Product>(c => c.Index(indexName), cancellationToken);
             if (finalCountResponse.IsValid)
             {
-                _logger.LogInformation("Verification: Index {IndexName} now contains {Count} documents", indexName, finalCountResponse.Count);
+                logger.LogInformation("Verification: Index {IndexName} now contains {Count} documents", indexName, finalCountResponse.Count);
             }
             
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error bulk indexing products");
+            logger.LogError(ex, "Error bulk indexing products");
             return false;
         }
     }
@@ -199,16 +189,16 @@ public class ProductRepository : IProductRepository
         try
         {
             // Build multi-search query
-            var multiSearchQuery = _queryBuilder.BuildMultiSearchQuery(indexName, searchTerm, pageSize);
+            var multiSearchQuery = queryBuilder.BuildMultiSearchQuery(indexName, searchTerm, pageSize);
             
             // Execute multi-search
-            var response = await _client.LowLevel.MultiSearchAsync<StringResponse>(
+            var response = await client.LowLevel.MultiSearchAsync<StringResponse>(
                 PostData.String(multiSearchQuery),
                 ctx: cancellationToken);
 
             if (!response.Success)
             {
-                _logger.LogError("Multi-search failed: {Error}", response.OriginalException?.Message);
+                logger.LogError("Multi-search failed: {Error}", response.OriginalException?.Message);
                 throw new InvalidOperationException($"Search failed: {response.OriginalException?.Message}");
             }
 
@@ -221,7 +211,7 @@ public class ProductRepository : IProductRepository
             {
                 if (searchResponse.Error != null)
                 {
-                    _logger.LogWarning("Layer search error: {Error}", searchResponse.Error.Reason);
+                    logger.LogWarning("Layer search error: {Error}", searchResponse.Error.Reason);
                     continue;
                 }
 
@@ -235,12 +225,12 @@ public class ProductRepository : IProductRepository
                 }
             }
 
-            _logger.LogInformation("Layered search completed. Found {Count} unique products", allProducts.Count);
+            logger.LogInformation("Layered search completed. Found {Count} unique products", allProducts.Count);
             return allProducts;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error performing layered search");
+            logger.LogError(ex, "Error performing layered search");
             throw;
         }
     }
@@ -249,12 +239,12 @@ public class ProductRepository : IProductRepository
     {
         try
         {
-            var response = await _client.Indices.ExistsAsync(indexName, ct: cancellationToken);
+            var response = await client.Indices.ExistsAsync(indexName, ct: cancellationToken);
             return response.Exists;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking if index {IndexName} exists", indexName);
+            logger.LogError(ex, "Error checking if index {IndexName} exists", indexName);
             return false;
         }
     }

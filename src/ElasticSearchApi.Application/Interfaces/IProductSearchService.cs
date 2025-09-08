@@ -1,8 +1,5 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using ElasticSearchApi.Domain.Entities;
 using ElasticSearchApi.Application.Models;
+using ElasticSearchApi.Domain.Entities;
 
 namespace ElasticSearchApi.Application.Interfaces;
 

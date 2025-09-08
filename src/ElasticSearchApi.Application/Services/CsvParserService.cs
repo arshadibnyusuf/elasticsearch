@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
 using ElasticSearchApi.Application.Interfaces;
@@ -13,14 +8,8 @@ using Newtonsoft.Json;
 
 namespace ElasticSearchApi.Application.Services;
 
-public class CsvParserService : ICsvParserService
+public class CsvParserService(ILogger<CsvParserService> logger) : ICsvParserService
 {
-    private readonly ILogger<CsvParserService> _logger;
-
-    public CsvParserService(ILogger<CsvParserService> logger)
-    {
-        _logger = logger;
-    }
 
     public async Task<IEnumerable<Product>> ParseProductsAsync(string filePath)
     {
@@ -35,7 +24,7 @@ public class CsvParserService : ICsvParserService
                 MissingFieldFound = null,
                 BadDataFound = context =>
                 {
-                    _logger.LogWarning($"Bad data found at row {context.Context.Parser.Row}: {context.RawRecord}");
+                    logger.LogWarning($"Bad data found at row {context.Context.Parser.Row}: {context.RawRecord}");
                 }
             });
 
@@ -73,7 +62,7 @@ public class CsvParserService : ICsvParserService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Error parsing row {rowNumber}");
+                    logger.LogError(ex, $"Error parsing row {rowNumber}");
                 }
 
                 rowNumber++;
@@ -81,16 +70,16 @@ public class CsvParserService : ICsvParserService
                 // Log progress every 1000 rows
                 if (rowNumber % 1000 == 0)
                 {
-                    _logger.LogInformation($"CSV parsing progress: {rowNumber} rows processed, {products.Count} products parsed");
+                    logger.LogInformation($"CSV parsing progress: {rowNumber} rows processed, {products.Count} products parsed");
                 }
             }
 
-            _logger.LogInformation($"Successfully parsed {products.Count} products from CSV (processed {rowNumber - 1} rows total)");
+            logger.LogInformation($"Successfully parsed {products.Count} products from CSV (processed {rowNumber - 1} rows total)");
             return products;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error reading CSV file");
+            logger.LogError(ex, "Error reading CSV file");
             throw;
         }
     }
