@@ -34,7 +34,7 @@ ElasticSearchApi/
 
 1. **Start all services**:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 2. **Wait for automatic indexing**:
