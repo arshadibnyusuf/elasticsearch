@@ -71,13 +71,13 @@ public class LayeredQueryBuilder : ILayeredQueryBuilder
                         ["multi_match"] = new JObject
                         {
                             ["query"] = searchTerm,
-                            ["fields"] = new JArray(_searchableFields),
+                            ["fields"] = JArray.FromObject(_searchableFields),
                             ["fuzziness"] = 0
                         }
                     },
                     ["must_not"] = new JArray
                     {
-                        layer1Query["query"]["bool"]["must"]
+                        layer1Query["query"]!["bool"]!["must"]!
                     }
                 }
             },
@@ -101,14 +101,14 @@ public class LayeredQueryBuilder : ILayeredQueryBuilder
                         ["multi_match"] = new JObject
                         {
                             ["query"] = searchTerm,
-                            ["fields"] = new JArray(_searchableFields),
+                            ["fields"] = JArray.FromObject(_searchableFields),
                             ["fuzziness"] = 1
                         }
                     },
                     ["must_not"] = new JArray
                     {
-                        layer1Query["query"]["bool"]["must"],
-                        layer2Query["query"]["bool"]["must"]
+                        layer1Query["query"]!["bool"]!["must"]!,
+                        layer2Query["query"]!["bool"]!["must"]!
                     }
                 }
             },
@@ -132,15 +132,15 @@ public class LayeredQueryBuilder : ILayeredQueryBuilder
                         ["multi_match"] = new JObject
                         {
                             ["query"] = searchTerm,
-                            ["fields"] = new JArray(_searchableFields),
+                            ["fields"] = JArray.FromObject(_searchableFields),
                             ["fuzziness"] = 2
                         }
                     },
                     ["must_not"] = new JArray
                     {
-                        layer1Query["query"]["bool"]["must"],
-                        layer2Query["query"]["bool"]["must"],
-                        layer3Query["query"]["bool"]["must"]
+                        layer1Query["query"]!["bool"]!["must"]!,
+                        layer2Query["query"]!["bool"]!["must"]!,
+                        layer3Query["query"]!["bool"]!["must"]!
                     }
                 }
             },

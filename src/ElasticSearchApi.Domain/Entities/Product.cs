@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace ElasticSearchApi.Domain.Entities;
 
 public class Product

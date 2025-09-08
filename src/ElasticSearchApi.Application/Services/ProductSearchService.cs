@@ -46,8 +46,8 @@ public class ProductSearchService(
                     return result;
                 }
 
-                using var settingsStream = File.OpenRead(SettingsPath);
-                using var mappingsStream = File.OpenRead(MappingsPath);
+                await using var settingsStream = File.OpenRead(SettingsPath);
+                await using var mappingsStream = File.OpenRead(MappingsPath);
                 
                 var created = await productRepository.CreateIndexAsync(
                     indexName, settingsStream, mappingsStream, cancellationToken);

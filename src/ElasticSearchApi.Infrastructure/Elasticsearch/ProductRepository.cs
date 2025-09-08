@@ -1,17 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Elasticsearch.Net;
+using ElasticSearchApi.Domain.Entities;
+using ElasticSearchApi.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using Nest;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ElasticSearchApi.Domain.Entities;
-using ElasticSearchApi.Domain.Interfaces;
 
 namespace ElasticSearchApi.Infrastructure.Elasticsearch;
 
@@ -204,6 +197,11 @@ public class ProductRepository(
 
             // Parse response
             var msearchResponse = JsonConvert.DeserializeObject<MultiSearchResponse>(response.Body);
+            if (msearchResponse == null)
+            {
+                throw new InvalidOperationException("Failed to parse multi-search response");
+            }
+            
             List<Product> allProducts = [];
             HashSet<string> addedIds = [];
 

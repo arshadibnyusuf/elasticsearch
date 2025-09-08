@@ -88,7 +88,7 @@ public class ProductsController(
             {
                 query = q,
                 count = results.Count,
-                results = results
+                results
             });
         }
         catch (Exception ex)
