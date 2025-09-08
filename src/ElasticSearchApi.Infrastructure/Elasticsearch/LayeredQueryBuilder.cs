@@ -7,6 +7,7 @@ namespace ElasticSearchApi.Infrastructure.Elasticsearch;
 public class LayeredQueryBuilder : ILayeredQueryBuilder
 {
     private readonly string[] _searchableFields = ["title", "brand", "description", "categories", "product_details"];
+    private readonly string[] _primaryFields = ["title", "brand", "categories"];
 
     public string BuildMultiSearchQuery(string indexName, string searchTerm, int pageSize)
     {
@@ -28,6 +29,10 @@ public class LayeredQueryBuilder : ILayeredQueryBuilder
         var layer4Query = BuildLayer4Query(searchTerm, layer1Query, layer2Query, layer3Query);
         AppendQuery(sb, indexName, layer4Query, pageSize);
 
+        // Layer 5: multi_match with fuzziness 2 and OR operator, excluding Layers 1-4
+        var layer5Query = BuildLayer5Query(searchTerm, layer1Query, layer2Query, layer3Query, layer4Query);
+        AppendQuery(sb, indexName, layer5Query, pageSize);
+
         return sb.ToString();
     }
 
@@ -44,9 +49,10 @@ public class LayeredQueryBuilder : ILayeredQueryBuilder
                         ["multi_match"] = new JObject
                         {
                             ["query"] = searchTerm,
-                            ["fields"] = new JArray("title", "brand", "categories"),
+                            ["fields"] = JArray.FromObject(_primaryFields),
                             ["type"] = "phrase",
-                            ["slop"] = 2
+                            ["slop"] = 2,
+                            ["operator"] = "and"
                         }
                     }
                 }
@@ -71,8 +77,9 @@ public class LayeredQueryBuilder : ILayeredQueryBuilder
                         ["multi_match"] = new JObject
                         {
                             ["query"] = searchTerm,
-                            ["fields"] = JArray.FromObject(_searchableFields),
-                            ["fuzziness"] = 0
+                            ["fields"] = JArray.FromObject(_primaryFields),
+                            ["fuzziness"] = 0,
+                            ["operator"] = "and"
                         }
                     },
                     ["must_not"] = new JArray
@@ -101,8 +108,9 @@ public class LayeredQueryBuilder : ILayeredQueryBuilder
                         ["multi_match"] = new JObject
                         {
                             ["query"] = searchTerm,
-                            ["fields"] = JArray.FromObject(_searchableFields),
-                            ["fuzziness"] = 1
+                            ["fields"] = JArray.FromObject(_primaryFields),
+                            ["fuzziness"] = 1,
+                            ["operator"] = "and"
                         }
                     },
                     ["must_not"] = new JArray
@@ -133,7 +141,8 @@ public class LayeredQueryBuilder : ILayeredQueryBuilder
                         {
                             ["query"] = searchTerm,
                             ["fields"] = JArray.FromObject(_searchableFields),
-                            ["fuzziness"] = 2
+                            ["fuzziness"] = 2,
+                            ["operator"] = "and"
                         }
                     },
                     ["must_not"] = new JArray
@@ -141,6 +150,40 @@ public class LayeredQueryBuilder : ILayeredQueryBuilder
                         layer1Query["query"]!["bool"]!["must"]!,
                         layer2Query["query"]!["bool"]!["must"]!,
                         layer3Query["query"]!["bool"]!["must"]!
+                    }
+                }
+            },
+            ["sort"] = new JArray
+            {
+                new JObject { ["rank"] = "asc" }
+            }
+        };
+    }
+
+    private JObject BuildLayer5Query(string searchTerm, JObject layer1Query, JObject layer2Query, JObject layer3Query, JObject layer4Query)
+    {
+        return new JObject
+        {
+            ["query"] = new JObject
+            {
+                ["bool"] = new JObject
+                {
+                    ["must"] = new JObject
+                    {
+                        ["multi_match"] = new JObject
+                        {
+                            ["query"] = searchTerm,
+                            ["fields"] = JArray.FromObject(_searchableFields),
+                            ["fuzziness"] = 2,
+                            ["operator"] = "or"
+                        }
+                    },
+                    ["must_not"] = new JArray
+                    {
+                        layer1Query["query"]!["bool"]!["must"]!,
+                        layer2Query["query"]!["bool"]!["must"]!,
+                        layer3Query["query"]!["bool"]!["must"]!,
+                        layer4Query["query"]!["bool"]!["must"]!
                     }
                 }
             },

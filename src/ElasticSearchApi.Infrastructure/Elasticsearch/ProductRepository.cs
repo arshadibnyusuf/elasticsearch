@@ -221,8 +221,8 @@ public class ProductRepository(
                 }
             }
 
-            logger.LogInformation("Layered search completed. Found {Count} unique products", allProducts.Count);
-            return allProducts;
+            logger.LogInformation("Layered search completed. Found {Count} unique products, returning {PageSize}", allProducts.Count, Math.Min(allProducts.Count, pageSize));
+            return allProducts.Take(pageSize).ToList();
         }
         catch (Exception ex)
         {

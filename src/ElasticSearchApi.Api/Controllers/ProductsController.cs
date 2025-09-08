@@ -16,6 +16,7 @@ public class ProductsController(
     /// Indexes products from the data.csv file into Elasticsearch
     /// </summary>
     [HttpPost("index")]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<IActionResult> IndexProducts(CancellationToken cancellationToken = default)
     {
         try
