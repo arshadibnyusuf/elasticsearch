@@ -144,8 +144,6 @@ public class ProductRepository(
                     logger.LogError("Some documents failed to index in batch {CurrentBatch}", currentBatch);
                     return false;
                 }
-                
-                // If we get here, all documents were indexed successfully (even if status was 201)
 
                 totalIndexed += batchList.Count;
                 logger.LogInformation("Batch {CurrentBatch}/{TotalBatches} completed successfully. Total indexed so far: {TotalIndexed}/{Total} products", 
@@ -181,8 +179,9 @@ public class ProductRepository(
     {
         try
         {
-            // Build multi-search query
             var multiSearchQuery = queryBuilder.BuildMultiSearchQuery(indexName, searchTerm, pageSize);
+            
+            logger.LogInformation("Elasticsearch Multi-Search Query:\n{Query}", multiSearchQuery);
             
             // Execute multi-search
             var response = await client.LowLevel.MultiSearchAsync<StringResponse>(
@@ -195,7 +194,6 @@ public class ProductRepository(
                 throw new InvalidOperationException($"Search failed: {response.OriginalException?.Message}");
             }
 
-            // Parse response
             var msearchResponse = JsonConvert.DeserializeObject<MultiSearchResponse>(response.Body);
             if (msearchResponse == null)
             {
