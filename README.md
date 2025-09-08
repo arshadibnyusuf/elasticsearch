@@ -48,9 +48,6 @@ ElasticSearchApi/
 
 ## API Endpoints
 
-### POST /api/products/index
-Indexes products from the `data.csv` file into Elasticsearch.
-
 ### GET /api/products/search
 Searches for products using a sophisticated layered query approach.
 
